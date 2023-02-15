@@ -1,0 +1,11 @@
+[Unit]
+Description=TV Ripper
+
+[Service]
+User=vince
+Group=vince
+WorkingDirectory=/opt/tvd
+ExecStart=python3 tvd.py
+
+[Install]
+WantedBy=multi-user.target
