@@ -31,7 +31,9 @@ class Program:
         )
 
     def __str__(self):
-        return f"{self.start} - {self.end} | {self.channel} {self.station} | {self.title}"
+        return (
+            f"{self.start} - {self.end} | {self.channel} {self.station} | {self.title}"
+        )
 
 
 def atsc_get_guide():
@@ -89,7 +91,7 @@ def atsc_get_guide():
         if end < start:
             end = end + datetime.timedelta(days=1)
         p = Program(
-            channel=m.group('channel'),
+            channel=m.group("channel"),
             station=m.group("station"),
             start=start,
             end=end,
@@ -149,4 +151,3 @@ while True:
         processor_queue.append(rfile)
     elif recorder:
         recorder.wait()
-
