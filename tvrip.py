@@ -3,6 +3,8 @@ from subprocess import DEVNULL, PIPE, Popen
 from typing import Dict, IO, List, Tuple, Union
 import datetime
 import re
+import signal
+import sys
 import time
 
 
@@ -47,7 +49,7 @@ def atsc_get_guide():
         # Run process and capture output.
         stdout, stderr = proc.communicate()
 
-    # dvbtee provides the programming guide JSON as log output in stderr:
+    # dvbtee provides the programming guide as log output in stderr:
     # dump_epg_event: id:3 - 55.3: Movies!    2023-01-26 07:35-09:15 Danger Signal
     schedule: List[Program] = []
     for line in stderr.splitlines():
@@ -103,15 +105,28 @@ def atsc_get_guide():
     return schedule
 
 
-# Record continually, naming and terminating each recording based on the guide.
+# Global processes. Kill them if the main process is terminated.
 recorder: Popen = None
 processor: Popen = None
 processor_queue: List[Path] = []
-while True:
 
+
+def onexit(signal, frame):
+    if recorder:
+        recorder.terminate()
+    if processor:
+        processor.terminate()
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, onexit)
+signal.signal(signal.SIGTERM, onexit)
+
+
+# Record continually, naming and terminating each recording based on the guide.
+while True:
     # If recorder is blank, scan the guide and start a new recording job.
     if recorder is None:
-
         # Get current program.
         print("Getting program guide...")
         schedule = atsc_get_guide()
